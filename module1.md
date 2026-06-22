@@ -1,16 +1,5 @@
-# Модуль 1. ER-диаграмма
-
-Сайт:
 
 https://dbdiagram.io
-
-1. Нажать New Diagram
-
-2. Нажать Ctrl+A
-
-3. Нажать Delete
-
-4. Вставить код:
 
 ```sql
 Table Customers {
