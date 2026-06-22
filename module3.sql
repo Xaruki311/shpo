@@ -5,65 +5,49 @@
 
 SELECT
 
-o.order_id,
+'Пицца Пеперони 33см.' AS product_name,
 
-c.name AS customer_name,
+(
 
-p.product_name,
+2 * 85 +
 
-oi.quantity,
+0.03 * 210 +
 
-SUM(
+0.2 * 200 +
 
-oi.quantity
+0.5 * 400 +
 
-*
+0.15 * 960 +
 
-s.quantity
+0.1 * 890 +
 
-*
-
-m.price
+0.2 * 350
 
 )
 
-AS total_order_cost
+AS one_pizza_cost,
 
-FROM Orders o
+4 AS quantity,
 
-JOIN Customers c
+(
 
-ON o.customer_id = c.customer_id
+2 * 85 +
 
-JOIN OrderItems oi
+0.03 * 210 +
 
-ON o.order_id = oi.order_id
+0.2 * 200 +
 
-JOIN Products p
+0.5 * 400 +
 
-ON oi.product_id = p.product_id
+0.15 * 960 +
 
-JOIN Specifications s
+0.1 * 890 +
 
-ON p.product_id = s.product_id
+0.2 * 350
 
-JOIN Materials m
+) * 4
 
-ON s.material_id = m.material_id
-
-GROUP BY
-
-o.order_id,
-
-c.name,
-
-p.product_name,
-
-oi.quantity;
-
-
-
-Нажать:
+AS total_order_cost;
 
 ⚡ Execute
 
