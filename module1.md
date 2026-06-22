@@ -1,100 +1,115 @@
+# Модуль 1. ER-диаграмма
+
+Сайт:
+
+https://dbdiagram.io
+
+1. Нажать New Diagram
+
+2. Нажать Ctrl+A
+
+3. Нажать Delete
+
+4. Вставить код:
+
+```sql
 Table Customers {
 
-  customer_id int [pk]
+customer_id int [pk]
 
-  name varchar
+name varchar
 
-  inn varchar
+inn varchar
 
-  address varchar
+address varchar
 
-  phone varchar
+phone varchar
 
-  salesman boolean
+salesman boolean
 
-  buyer boolean
+buyer boolean
 
 }
 
 Table Products {
 
-  product_id int [pk]
+product_id int [pk]
 
-  product_code varchar
+product_code varchar
 
-  product_name varchar
+product_name varchar
 
-  price decimal
+price decimal
 
-  unit varchar
+unit varchar
 
-  manufacturer varchar
+manufacturer varchar
 
 }
 
 Table Materials {
 
-  material_id int [pk]
+material_id int [pk]
 
-  material_code varchar
+material_code varchar
 
-  material_name varchar
+material_name varchar
 
-  price decimal
+price decimal
 
-  unit varchar
+unit varchar
 
 }
 
 Table Specifications {
 
-  specification_id int [pk]
+specification_id int [pk]
 
-  product_id int
+product_id int
 
-  material_id int
+material_id int
 
-  quantity decimal
+quantity decimal
 
 }
 
 Table Orders {
 
-  order_id int [pk]
+order_id int [pk]
 
-  customer_id int
+customer_id int
 
-  order_date date
+order_date date
 
-  executor varchar
+executor varchar
 
 }
 
 Table OrderItems {
 
-  order_item_id int [pk]
+order_item_id int [pk]
 
-  order_id int
+order_id int
 
-  product_id int
+product_id int
 
-  quantity int
+quantity int
 
-  price decimal
+price decimal
 
-  total decimal
+total decimal
 
 }
 
 Table Production {
 
-  production_id int [pk]
+production_id int [pk]
 
-  production_date date
+production_date date
 
-  product_id int
+product_id int
 
-  quantity int
+quantity int
 
 }
 
@@ -109,3 +124,4 @@ Ref: Specifications.product_id > Products.product_id
 Ref: Specifications.material_id > Materials.material_id
 
 Ref: Production.product_id > Products.product_id
+```
