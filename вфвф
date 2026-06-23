@@ -1,0 +1,140 @@
+IF OBJECT_ID('Order_Items', 'U') IS NOT NULL DROP TABLE Order_Items;
+IF OBJECT_ID('Orders', 'U') IS NOT NULL DROP TABLE Orders;
+IF OBJECT_ID('Specifications', 'U') IS NOT NULL DROP TABLE Specifications;
+IF OBJECT_ID('Products', 'U') IS NOT NULL DROP TABLE Products;
+IF OBJECT_ID('Materials', 'U') IS NOT NULL DROP TABLE Materials;
+IF OBJECT_ID('Customers', 'U') IS NOT NULL DROP TABLE Customers;
+GO
+CREATE TABLE Materials (
+    Material_ID INT IDENTITY(1,1) PRIMARY KEY,
+    Material_Name NVARCHAR(255) NOT NULL,
+    Cost_Per_Unit DECIMAL(10, 2) NOT NULL
+);
+CREATE TABLE Products (
+    Product_ID INT IDENTITY(1,1) PRIMARY KEY,
+    Product_Name NVARCHAR(255) NOT NULL
+);
+CREATE TABLE Specifications (
+    Spec_ID INT IDENTITY(1,1) PRIMARY KEY,
+    Product_ID INT NOT NULL FOREIGN KEY REFERENCES Products(Product_ID),
+    Material_ID INT NOT NULL FOREIGN KEY REFERENCES Materials(Material_ID),
+    Quantity_Required DECIMAL(10, 3) NOT NULL
+);
+CREATE TABLE Customers (
+    Customer_ID_Internal INT IDENTITY(1,1) PRIMARY KEY,
+    id NVARCHAR(50) NULL,
+    name NVARCHAR(255) NULL,
+    inn NVARCHAR(50) NULL,
+    addres NVARCHAR(MAX) NULL,
+    phone NVARCHAR(50) NULL,
+    salesman BIT NULL,
+    buyer BIT NULL
+);
+CREATE TABLE Orders (
+    Order_ID INT IDENTITY(1,1) PRIMARY KEY,
+    Customer_ID INT NOT NULL FOREIGN KEY REFERENCES Customers(Customer_ID_Internal),
+    Order_Date DATE DEFAULT (GETDATE())
+);
+CREATE TABLE Order_Items (
+    Item_ID INT IDENTITY(1,1) PRIMARY KEY,
+    Order_ID INT NOT NULL FOREIGN KEY REFERENCES Orders(Order_ID),
+    Product_ID INT NOT NULL FOREIGN KEY REFERENCES Products(Product_ID),
+    Quantity INT NOT NULL
+);
+GO
+DECLARE @json NVARCHAR(MAX) = N'[
+	{
+		"id": "000000001",
+		"name": "ООО \"Поставка\"",
+		"inn": "",
+		"addres": "г.Пятигорск",
+		"phone": "+79198634592",
+		"salesman": true,
+		"buyer": true
+	},
+	{
+		"id": "000000002",
+		"name": "ООО \"Кинотеатр Квант\"",
+		"inn": "26320045123",
+		"addres": "г. Железноводск, ул. Мира, 123",
+		"phone": "+79884581555",
+		"salesman": true,
+		"buyer": false
+	},
+	{
+		"id": "000000008",
+		"name": "ООО \"Новый JDTO\"",
+		"inn": "26320045111",
+		"addres": "г. Железноводсу",
+		"phone": "+79884581555",
+		"salesman": true,
+		"buyer": false
+	},
+	{
+		"id": "000000003",
+		"name": "ООО \"Ромашка\"",
+		"inn": "4140784214",
+		"addres": "г. Омск, ул. Строителей, 294",
+		"phone": "+79882584546",
+		"salesman": false,
+		"buyer": true
+	},
+	{
+		"id": "000000009",
+		"name": "ООО \"Ипподром\"",
+		"inn": "5874045632",
+		"addres": "г. Уфа, ул. Набережная,  37",
+		"phone": "+79627486389",
+		"salesman": true,
+		"buyer": true
+	},
+	{
+		"id": "000000010",
+		"name": "ООО \"Ассоль\"",
+		"inn": "2629011278",
+		"addres": "г. Калуга, ул. Пушкина, 94",
+		"phone": "+79184572398",
+		"salesman": false,
+		"buyer": true
+	}
+]'; 
+INSERT INTO Customers (id, name, inn, addres, phone, salesman, buyer)
+SELECT id, name, inn, addres, phone, salesman, buyer
+FROM OPENJSON(@json)
+WITH (
+    id NVARCHAR(50) '$.id',
+    name NVARCHAR(255) '$.name',
+    inn NVARCHAR(50) '$.inn',
+    addres NVARCHAR(MAX) '$.addres',
+    phone NVARCHAR(50) '$.phone',
+    salesman BIT '$.salesman',
+    buyer BIT '$.buyer'
+);
+INSERT INTO Materials (Material_Name, Cost_Per_Unit) VALUES (N'Молоко', 34.00), (N'Закваска', 45.00);
+INSERT INTO Products (Product_Name) VALUES (N'Сметана 15%');
+DECLARE @m1 INT = (SELECT TOP 1 Material_ID FROM Materials WHERE Material_Name = N'Молоко');
+DECLARE @m2 INT = (SELECT TOP 1 Material_ID FROM Materials WHERE Material_Name = N'Закваска');
+DECLARE @p1 INT = (SELECT TOP 1 Product_ID FROM Products);
+INSERT INTO Specifications (Product_ID, Material_ID, Quantity_Required) VALUES (@p1, @m1, 0.900), (@p1, @m2, 0.070);
+DECLARE @c1 INT = (SELECT TOP 1 Customer_ID_Internal FROM Customers);
+INSERT INTO Orders (Customer_ID) VALUES (@c1);
+DECLARE @o1 INT = SCOPE_IDENTITY();
+INSERT INTO Order_Items (Order_ID, Product_ID, Quantity) VALUES (@o1, @p1, 10);
+GO
+SELECT 
+    O.Order_ID AS [Номер заказа],
+    C.name
+ AS [Покупатель],
+    SUM(OI.Q uantity * MaterialCosts.UnitCost) AS [Полная стоимость заказа]
+FROM Orders O
+JOIN Customers C ON O.Customer_ID = C.Customer_ID_Internal
+JOIN Order_Items OI ON O.Order_ID = OI.Order_ID
+JOIN (
+    SELECT 
+        S.Product_ID, 
+        SUM(S.Quantity_Required * M.Cost_Per_Unit) AS UnitCost
+    FROM Specifications S
+    JOIN Materials M ON S.Material_ID = M.Material_ID
+	GROUP BY S.Product_ID
+) AS MaterialCosts ON OI.Product_ID = MaterialCosts.Product_ID
+GROUP BY O.Order_ID, C.name, O.Order_Date;
